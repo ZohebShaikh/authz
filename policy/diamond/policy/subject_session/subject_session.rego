@@ -9,18 +9,26 @@ beamlines contains beamline if {
 	some beamline in object.get(data.diamond.data.admin, p, [])
 }
 
-tags contains to_number(tag) if {
+public_tags := {"public"}
+
+tags contains tag if {
 	"super_admin" in data.diamond.data.subjects[token.claims.fedid].permissions
 	some tag in object.keys(data.diamond.data.sessions)
 }
 
-tags contains to_number(tag) if {
+tags contains formatted_tag if {
 	some tag in data.diamond.data.subjects[token.claims.fedid].sessions
+	formatted_tag := format_int(tag, 10)
 }
 
-tags contains to_number(tag) if {
+tags contains formatted_tag if {
 	some beamline in beamlines
 	some tag in data.diamond.data.beamlines[beamline].sessions
+	formatted_tag := format_int(tag, 10)
+}
+
+tags contains tag if {
+	some tag in public_tags
 }
 
 read_scopes := {
@@ -48,11 +56,14 @@ scopes contains scope if {
 	some scope in read_scopes
 }
 
+exclude_public := tags - public_tags
+
 default allow := false
 
 # Allow to modify and create tiled node if the sessions are accessible to the user
+
 allow if {
 	every tag in input.access_blob.tags {
-		to_number(tag) in tags
+		tag in exclude_public
 	}
 }

@@ -43,17 +43,17 @@ diamond_data := {
 }
 
 test_tags_for_super_admin if {
-	subject_session.tags == {11, 12} with data.diamond.data as diamond_data
+	subject_session.tags == {"11", "12", "public"} with data.diamond.data as diamond_data
 		with data.diamond.policy.token.claims as {"fedid": "carol"}
 }
 
 test_tags_form_subject_sessions if {
-	subject_session.tags == {1, 2} with data.diamond.data as diamond_data
+	subject_session.tags == {"1", "2", "public"} with data.diamond.data as diamond_data
 		with data.diamond.policy.token.claims as {"fedid": "alice"}
 }
 
 test_tags_from_subject_beamline_permissions if {
-	subject_session.tags == {12} with data.diamond.data as diamond_data
+	subject_session.tags == {"12", "public"} with data.diamond.data as diamond_data
 		with data.diamond.policy.token.claims as {"fedid": "oscar"}
 }
 
