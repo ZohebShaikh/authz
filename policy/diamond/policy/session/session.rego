@@ -60,7 +60,7 @@ user_sessions contains user_session if {
 	some session in data.diamond.data.sessions
 	access_session(token.claims.fedid, session.proposal_number, session.visit_number)
 	user_session := sprintf(
-		"\"proposal_number\": %d, \"visit_number\": %d, \"beamline\": %s",
+		"{\"proposal_number\": \"%d\", \"visit_number\": \"%d\", \"beamline\": \"%s\"}",
 		[session.proposal_number, session.visit_number, session.beamline],
 	)
 }
