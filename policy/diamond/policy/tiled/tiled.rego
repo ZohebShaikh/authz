@@ -37,5 +37,8 @@ scopes := scopes_for(token.claims)
 user_sessions contains user_session if {
 	some i in data.diamond.data.sessions
 	session.access_session(token.claims.fedid, i.proposal_number, i.visit_number)
-	user_session := sprintf("%s", [i])
+	user_session := sprintf(
+		`{"proposal": %d, "visit": %d, "beamline": "%s"}`,
+		[i.proposal_number, i.visit_number, i.beamline],
+	)
 }
