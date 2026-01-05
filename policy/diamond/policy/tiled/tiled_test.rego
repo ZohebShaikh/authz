@@ -24,6 +24,17 @@ test_blueapi_given_write_scopes if {
 	} with data.diamond.policy.token.claims as {"azp": "foo-blueapi"}
 }
 
+test_blueapi_given_write_scopes_visr if {
+	tiled.scopes == {
+		"read:metadata",
+		"read:data",
+		"write:metadata",
+		"write:data",
+		"create:node",
+		"register",
+	} with data.diamond.policy.token.claims as {"azp": "visr-app"}
+}
+
 diamond_data := {
 	"subjects": {
 		"alice": {

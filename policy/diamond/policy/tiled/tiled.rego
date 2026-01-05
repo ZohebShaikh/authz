@@ -21,9 +21,15 @@ scopes_for(claims) := read_scopes | write_scopes if {
 	endswith(claims.azp, "-blueapi")
 }
 
+scopes_for(claims) := read_scopes | write_scopes if {
+	"azp" in object.keys(claims)
+	claims.azp == "visr-app"
+}
+
 scopes_for(claims) := read_scopes if {
 	"azp" in object.keys(claims)
 	not endswith(claims.azp, "-blueapi")
+	not claims.azp == "visr-app"
 }
 
 scopes_for(claims) := read_scopes if {
