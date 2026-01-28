@@ -43,32 +43,14 @@ user_session := to_number(key) if {
 	value.visit_number == input.visit
 }
 
-beamlines contains beamline if {
-	not admin.is_admin(token.claims.fedid)
-	some p in data.diamond.data.subjects[token.claims.fedid].permissions
-	some beamline in object.get(data.diamond.data.admin, p, [])
-}
-
 all_sessions := "*"
 
 user_sessions contains all_sessions if {
 	admin.is_admin(token.claims.fedid)
 }
 
-user_sessions contains to_number(session) if {
+user_sessions contains to_number(key) if {
 	not admin.is_admin(token.claims.fedid)
-	some session in data.diamond.data.subjects[token.claims.fedid].sessions
-}
-
-user_sessions contains to_number(session) if {
-	not admin.is_admin(token.claims.fedid)
-	some proposal in data.diamond.data.subjects[token.claims.fedid].proposals
-	some i in data.diamond.data.proposals[format_int(proposal, 10)]
-	some session in i
-}
-
-user_sessions contains to_number(session) if {
-	not admin.is_admin(token.claims.fedid)
-	some beamline in beamlines
-	some session in data.diamond.data.beamlines[beamline].sessions
+	some key, value in data.diamond.data.sessions
+	session.access_session(token.claims.fedid, value.proposal_number, value.visit_number)
 }
