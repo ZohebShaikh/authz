@@ -96,33 +96,26 @@ diamond_data := {
 test_user_session_tags if {
 	tiled.user_sessions == set() with data.diamond.data as diamond_data
 		with data.diamond.policy.token.claims as {"fedid": "oscar"}
-	tiled.user_sessions == {
-		`{"proposal": 1, "visit": 2, "beamline": "b07"}`,
-		`{"proposal": 1, "visit": 1, "beamline": "i03"}`,
-	} with data.diamond.data as diamond_data
+	tiled.user_sessions == {11, 12} with data.diamond.data as diamond_data
 		with data.diamond.policy.token.claims as {"fedid": "alice"}
-	tiled.user_sessions == {
-		`{"proposal": 1, "visit": 2, "beamline": "b07"}`,
-		`{"proposal": 1, "visit": 1, "beamline": "i03"}`,
-		`{"proposal": 2, "visit": 1, "beamline": "b07"}`,
-		`{"proposal": 2, "visit": 2, "beamline": "b07"}`,
-	} with data.diamond.data as diamond_data
+	tiled.user_sessions == {11, 12, 13, 14} with data.diamond.data as diamond_data
 		with data.diamond.policy.token.claims as {"fedid": "bob"}
-	tiled.user_sessions == {
-		`{"proposal": 1, "visit": 2, "beamline": "b07"}`,
-		`{"proposal": 1, "visit": 1, "beamline": "i03"}`,
-		`{"proposal": 2, "visit": 1, "beamline": "b07"}`,
-		`{"proposal": 2, "visit": 2, "beamline": "b07"}`,
-	} with data.diamond.data as diamond_data
+	tiled.user_sessions == {"*"} with data.diamond.data as diamond_data
 		with data.diamond.policy.token.claims as {"fedid": "carol"}
-	tiled.user_sessions == {
-		`{"proposal": 2, "visit": 1, "beamline": "b07"}`,
-		`{"proposal": 2, "visit": 2, "beamline": "b07"}`,
-	} with data.diamond.data as diamond_data
+	tiled.user_sessions == {13, 14} with data.diamond.data as diamond_data
 		with data.diamond.policy.token.claims as {"fedid": "desmond"}
-	tiled.user_sessions == {
-		`{"proposal": 2, "visit": 1, "beamline": "b07"}`,
-		`{"proposal": 2, "visit": 2, "beamline": "b07"}`,
-	} with data.diamond.data as diamond_data
+	tiled.user_sessions == {13, 14} with data.diamond.data as diamond_data
 		with data.diamond.policy.token.claims as {"fedid": "edna"}
+}
+
+test_user_session_allow if {
+	tiled.user_session == 11 with data.diamond.data as diamond_data
+		with input as {"beamline": "i03", "proposal": 1, "visit": 1}
+		with data.diamond.policy.token.claims as {"fedid": "carol"}
+}
+
+test_user_session_not_allowed if {
+	not tiled.user_session with data.diamond.data as diamond_data
+		with input as {"beamline": "i03", "proposal": 1, "visit": 1}
+		with data.diamond.policy.token.claims as {"fedid": "oscar"}
 }
