@@ -128,6 +128,6 @@ test_not_access_session if {
 
 test_access_session if {
 	tiled.modify_session with data.diamond.data as diamond_data
-		with input as {"session": "11"}
+		with input as {"session": 11}
 		with data.diamond.policy.token.claims as {"fedid": "alice"}
 }
