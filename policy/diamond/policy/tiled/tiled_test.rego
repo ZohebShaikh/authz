@@ -119,3 +119,15 @@ test_user_session_not_allowed if {
 		with input as {"beamline": "i03", "proposal": 1, "visit": 1}
 		with data.diamond.policy.token.claims as {"fedid": "oscar"}
 }
+
+test_not_access_session if {
+	not tiled.modify_session with data.diamond.data as diamond_data
+		with input as {"session": "13"}
+		with data.diamond.policy.token.claims as {"fedid": "alice"}
+}
+
+test_access_session if {
+	tiled.modify_session with data.diamond.data as diamond_data
+		with input as {"session": "11"}
+		with data.diamond.policy.token.claims as {"fedid": "alice"}
+}
