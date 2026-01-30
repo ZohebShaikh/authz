@@ -43,8 +43,10 @@ user_session := to_number(key) if {
 	value.visit_number == input.visit
 }
 
-_session := data.diamond.data.sessions[format_int(input.session,10)]
-default modify_session := false 
+_session := data.diamond.data.sessions[format_int(input.session, 10)]
+
+default modify_session := false
+
 modify_session := session.access_session(
 	token.claims.fedid,
 	_session.proposal_number,
