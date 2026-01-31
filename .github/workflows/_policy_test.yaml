@@ -3,6 +3,11 @@ name: Policy Test
 on:
   workflow_call:
 
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write # required to comment on PRs
+
 jobs:
   test:
     runs-on: ubuntu-latest
