@@ -7,10 +7,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-      pull-requests: write # required to comment on PRs
+    # permissions:
+    #   id-token: write
+    #   contents: read
+    #   pull-requests: write # required to comment on PRs
     steps:
       - name: Checkout source
         uses: actions/checkout@v4.2.2
