@@ -48,7 +48,7 @@ user_session := to_number(_session) if {
 
 default fedid := ""
 
-fedid := token.claims.fedid if token.claims.fedid
+fedid := token.claims.fedid
 
 # Validates if the subject has permission to modify
 # the specific session in the input.
