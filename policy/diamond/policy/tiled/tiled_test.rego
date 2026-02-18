@@ -173,42 +173,30 @@ test_modify_session_on_session if {
 test_modify_session_on_permission if {
 	tiled.modify_session with data.diamond.data as diamond_data
 		with input as {"session": "12"}
-		with data.diamond.policy.token.claims as {
-			"subject": {
-				"proposals": [],
-				"sessions": [],
-				"permissions": ["b07_admin"],
-			},
-			"fedid": "",
-		}
+		with data.diamond.policy.token.claims as {"subject": {
+			"proposals": [],
+			"sessions": [],
+			"permissions": ["b07_admin"],
+		}}
 }
 
 test_user_session_tags_service_account if {
 	tiled.user_sessions == {11} with data.diamond.data as diamond_data
-		with data.diamond.policy.token.claims as {
-			"subject": {
-				"proposals": [],
-				"sessions": [11],
-				"permissions": [],
-			},
-			"fedid": "",
-		}
+		with data.diamond.policy.token.claims as {"subject": {
+			"proposals": [],
+			"sessions": [11],
+			"permissions": [],
+		}}
 	tiled.user_sessions == {11, 12} with data.diamond.data as diamond_data
-		with data.diamond.policy.token.claims as {
-			"subject": {
-				"proposals": [1],
-				"sessions": [],
-				"permissions": [],
-			},
-			"fedid": "",
-		}
+		with data.diamond.policy.token.claims as {"subject": {
+			"proposals": [1],
+			"sessions": [],
+			"permissions": [],
+		}}
 	tiled.user_sessions == {12, 13, 14} with data.diamond.data as diamond_data
-		with data.diamond.policy.token.claims as {
-			"subject": {
-				"proposals": [],
-				"sessions": [],
-				"permissions": ["b07_admin"],
-			},
-			"fedid": "",
-		}
+		with data.diamond.policy.token.claims as {"subject": {
+			"proposals": [],
+			"sessions": [],
+			"permissions": ["b07_admin"],
+		}}
 }
