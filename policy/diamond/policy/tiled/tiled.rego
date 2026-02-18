@@ -5,56 +5,77 @@ import data.diamond.policy.session
 import data.diamond.policy.token
 import rego.v1
 
-read_scopes := {
+# Assign read & write scopes to clients with tiled-writer audience
+# defaults to read-only scopes
+default scopes := {
 	"read:metadata",
 	"read:data",
 }
 
-write_scopes := {
+scopes := {
+	"read:metadata",
+	"read:data",
 	"write:metadata",
 	"write:data",
 	"create:node",
 	"register",
+} if {
+	"tiled-writer" in token.claims.aud
 }
-
-scopes_for(claims) := read_scopes | write_scopes if {
-	"azp" in object.keys(claims)
-	endswith(claims.azp, "-blueapi")
-}
-
-scopes_for(claims) := read_scopes if {
-	"azp" in object.keys(claims)
-	not endswith(claims.azp, "-blueapi")
-}
-
-scopes_for(claims) := read_scopes if {
-	not "azp" in object.keys(claims)
-}
-
-# Assign read & write scopes to blueapi clients
-# defaults to read-only scopes
-default scopes := set()
-
-scopes := scopes_for(token.claims)
 
 # Returns the session ID if the subject has write permissions for the
 # specific beamline, visit and proposal requested in the input.
-user_session := to_number(value) if {
+_session := data.diamond.data.proposals[format_int(input.proposal, 10)].sessions[format_int(input.visit, 10)]
+
+user_session := to_number(_session) if {
 	session.write_to_beamline_visit
-	value := data.diamond.data.proposals[format_int(input.proposal, 10)].sessions[format_int(input.visit, 10)]
+	_session
+}
+
+# Service account will need either proposal or session
+
+user_session := to_number(_session) if {
+	input.proposal in token.claims.subject.proposals
+}
+
+user_session := to_number(_session) if {
+	_session in token.claims.subject.sessions
+}
+
+user_session := to_number(_session) if {
+	input.beamline in beamlines
+	input.beamline == session.beamline_for(input.proposal, input.visit)
+	_session in data.diamond.data.beamlines[input.beamline].sessions
 }
 
 # Validates if the subject has permission to modify
 # the specific session in the input.
 default modify_session := false
 
-modify_session := session.access_session(
+modify_session if session.access_session(
 	token.claims.fedid,
 	data.diamond.data.sessions[input.session].proposal_number,
 	data.diamond.data.sessions[input.session].visit_number,
 )
 
-subject := data.diamond.data.subjects[token.claims.fedid]
+modify_session if {
+	data.diamond.data.sessions[input.session].proposal_number in token.claims.subject.proposals
+}
+
+modify_session if {
+	to_number(input.session) in token.claims.subject.sessions
+}
+
+modify_session if {
+	session.beamline_for(
+		data.diamond.data.sessions[input.session].proposal_number,
+		data.diamond.data.sessions[input.session].visit_number,
+	) in beamlines
+}
+
+subject := data.diamond.data.subjects[token.claims.fedid] if token.claims.fedid
+
+else := token.claims.subject if token.claims.subject
 
 # Identifies all beamlines the subject is authorized to access
 # based on their assigned permissions.

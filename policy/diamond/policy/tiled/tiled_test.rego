@@ -3,17 +3,14 @@ package diamond.policy.tiled_test
 import data.diamond.policy.tiled
 import rego.v1
 
-test_default_no_scopes if {
-	tiled.scopes == set()
+test_read_scopes if {
+	tiled.scopes == {
+		"read:metadata",
+		"read:data",
+	} with data.diamond.policy.token.claims as {}
 }
 
-test_wrong_azp_read_scopes if {
-	tiled.scopes == tiled.read_scopes with data.diamond.policy.token.claims as {}
-	tiled.scopes == tiled.read_scopes with data.diamond.policy.token.claims as {"sub": "foo"}
-	tiled.scopes == tiled.read_scopes with data.diamond.policy.token.claims as {"azp": "foo"}
-}
-
-test_blueapi_given_write_scopes if {
+test_tiled_writer_given_write_scopes if {
 	tiled.scopes == {
 		"read:metadata",
 		"read:data",
@@ -21,7 +18,7 @@ test_blueapi_given_write_scopes if {
 		"write:data",
 		"create:node",
 		"register",
-	} with data.diamond.policy.token.claims as {"azp": "foo-blueapi"}
+	} with data.diamond.policy.token.claims as {"aud": ["tiled-writer"]}
 }
 
 diamond_data := {
@@ -130,4 +127,88 @@ test_modify_session if {
 	tiled.modify_session with data.diamond.data as diamond_data
 		with input as {"session": "11"}
 		with data.diamond.policy.token.claims as {"fedid": "alice"}
+}
+
+# Service account tests
+
+test_user_session_allow_service_account_on_proposal if {
+	tiled.user_session == 11 with data.diamond.data as diamond_data
+		with input as {"beamline": "i03", "proposal": 1, "visit": 1}
+		with data.diamond.policy.token.claims as {"subject": {"proposals": [1], "sessions": [], "permissions": []}}
+}
+
+test_user_session_allow_service_account_on_session if {
+	tiled.user_session == 11 with data.diamond.data as diamond_data
+		with input as {"beamline": "i03", "proposal": 1, "visit": 1}
+		with data.diamond.policy.token.claims as {"subject": {"proposals": [], "sessions": [11], "permissions": []}}
+}
+
+test_user_session_not_allow_service_account_wrong_beamline if {
+	not tiled.user_session with data.diamond.data as diamond_data
+		with input as {"beamline": "i03", "proposal": 1, "visit": 2}
+		with data.diamond.policy.token.claims as {"subject": {"proposals": [], "sessions": [], "permissions": ["b07_admin"]}}
+}
+
+test_user_session_allow_service_account_with_beamline if {
+	tiled.user_session with data.diamond.data as diamond_data
+		with input as {"beamline": "b07", "proposal": 1, "visit": 2}
+		with data.diamond.policy.token.claims as {
+			"subject": {"proposals": [], "sessions": [], "permissions": ["b07_admin"]},
+			"fedid": "",
+		}
+}
+
+test_modify_session_on_proposal if {
+	tiled.modify_session with data.diamond.data as diamond_data
+		with input as {"session": "11"}
+		with data.diamond.policy.token.claims as {"subject": {"proposals": [1], "sessions": [], "permissions": []}}
+}
+
+test_modify_session_on_session if {
+	tiled.modify_session with data.diamond.data as diamond_data
+		with input as {"session": "11"}
+		with data.diamond.policy.token.claims as {"subject": {"proposals": [], "sessions": [11], "permissions": []}}
+}
+
+test_modify_session_on_permission if {
+	tiled.modify_session with data.diamond.data as diamond_data
+		with input as {"session": "12"}
+		with data.diamond.policy.token.claims as {
+			"subject": {
+				"proposals": [],
+				"sessions": [],
+				"permissions": ["b07_admin"],
+			},
+			"fedid": "",
+		}
+}
+
+test_user_session_tags_service_account if {
+	tiled.user_sessions == {11} with data.diamond.data as diamond_data
+		with data.diamond.policy.token.claims as {
+			"subject": {
+				"proposals": [],
+				"sessions": [11],
+				"permissions": [],
+			},
+			"fedid": "",
+		}
+	tiled.user_sessions == {11, 12} with data.diamond.data as diamond_data
+		with data.diamond.policy.token.claims as {
+			"subject": {
+				"proposals": [1],
+				"sessions": [],
+				"permissions": [],
+			},
+			"fedid": "",
+		}
+	tiled.user_sessions == {12, 13, 14} with data.diamond.data as diamond_data
+		with data.diamond.policy.token.claims as {
+			"subject": {
+				"proposals": [],
+				"sessions": [],
+				"permissions": ["b07_admin"],
+			},
+			"fedid": "",
+		}
 }
