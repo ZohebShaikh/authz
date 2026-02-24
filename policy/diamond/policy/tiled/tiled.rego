@@ -32,57 +32,39 @@ user_session := to_number(_session) if {
 	_session
 }
 
+# service account check
 user_session := to_number(_session) if {
-	input.proposal in token.claims.subject.proposals
-}
-
-user_session := to_number(_session) if {
-	_session in token.claims.subject.sessions
-}
-
-user_session := to_number(_session) if {
-	input.beamline in beamlines
+	input.beamline == token.claims.beamline
 	input.beamline == session.beamline_for(input.proposal, input.visit)
 	_session in data.diamond.data.beamlines[input.beamline].sessions
 }
-
-default fedid := ""
-
-fedid := token.claims.fedid
 
 # Validates if the subject has permission to modify
 # the specific session in the input.
 default modify_session := false
 
 modify_session if session.access_session(
-	fedid,
+	token.claims.fedid,
 	data.diamond.data.sessions[input.session].proposal_number,
 	data.diamond.data.sessions[input.session].visit_number,
 )
 
+# service account check
 modify_session if {
-	data.diamond.data.sessions[input.session].proposal_number in token.claims.subject.proposals
-}
-
-modify_session if {
-	to_number(input.session) in token.claims.subject.sessions
-}
-
-modify_session if {
+	not token.claims.fedid
 	session.beamline_for(
 		data.diamond.data.sessions[input.session].proposal_number,
 		data.diamond.data.sessions[input.session].visit_number,
-	) in beamlines
+	) == token.claims.beamline
 }
 
-subject := data.diamond.data.subjects[token.claims.fedid] if token.claims.fedid
-
-else := token.claims.subject if token.claims.subject
+subject := data.diamond.data.subjects[token.claims.fedid]
 
 # Identifies all beamlines the subject is authorized to access
 # based on their assigned permissions.
 beamlines contains beamline if {
-	not admin.is_admin(fedid)
+	token.claims.fedid
+	not admin.is_admin(token.claims.fedid)
 	some p in subject.permissions
 	some beamline in object.get(data.diamond.data.admin, p, [])
 }
@@ -95,23 +77,33 @@ beamlines contains beamline if {
 # 2. Access via beamline-level permissions
 # 3. Access via proposal-level permissions
 user_sessions contains "*" if {
-	admin.is_admin(fedid)
+	subject
+	admin.is_admin(token.claims.fedid)
 }
 
 user_sessions contains to_number(session) if {
-	not admin.is_admin(fedid)
+	subject
+	not admin.is_admin(token.claims.fedid)
 	some session in subject.sessions
 }
 
 user_sessions contains to_number(session) if {
-	not admin.is_admin(fedid)
+	subject
+	not admin.is_admin(token.claims.fedid)
 	some beamline in beamlines
 	some session in data.diamond.data.beamlines[beamline].sessions
 }
 
 user_sessions contains to_number(session) if {
-	not admin.is_admin(fedid)
+	subject
+	not admin.is_admin(token.claims.fedid)
 	some p in subject.proposals
 	some i in data.diamond.data.proposals[format_int(p, 10)]
 	some session in i
+}
+
+# service account check
+user_sessions contains to_number(session) if {
+	not subject
+	some session in data.diamond.data.beamlines[token.claims.beamline].sessions
 }
